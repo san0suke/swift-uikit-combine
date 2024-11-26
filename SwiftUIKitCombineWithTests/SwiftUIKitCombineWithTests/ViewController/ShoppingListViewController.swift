@@ -11,7 +11,8 @@ class ShoppingListViewController: UIViewController {
     
     let cellKey = "cell"
     
-    var itemsData: [String] = []
+    var itemsData: [ShoppingItem] = []
+    let shoppingItemManager = ShoppingItemManager()
     
     private let shopTableView: UITableView = {
         let tableView = UITableView()
@@ -22,6 +23,8 @@ class ShoppingListViewController: UIViewController {
     
     override func viewDidLoad() {
         view.backgroundColor = .white
+        
+        itemsData = shoppingItemManager.fetchAllItems()
         
         title = "Shopping List"
         
@@ -56,7 +59,7 @@ class ShoppingListViewController: UIViewController {
             textField.placeholder = "Name"
             
             if let index = index {
-                textField.text = self?.itemsData[index]
+                textField.text = self?.itemsData[index].name
             }
         }
         
@@ -64,10 +67,15 @@ class ShoppingListViewController: UIViewController {
             if let itemName = alert.textFields?.first?.text,
                !itemName.isEmpty {
                 
-                if let index = index {
-                    self?.itemsData[index] = itemName
+                if let index = index,
+                   let item = self?.itemsData[index] {
+                    if (self?.shoppingItemManager.updateItem(item: item, newName: itemName)) != nil {
+                        self?.itemsData[index].name = itemName
+                    }
                 } else {
-                    self?.itemsData.append(itemName)
+                    if let item = self?.shoppingItemManager.createItem(name: itemName) {
+                        self?.itemsData.append(item)
+                    }
                 }
                 
                 self?.shopTableView.reloadData()
@@ -95,7 +103,10 @@ extension ShoppingListViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, completionHandler in
-            self?.itemsData.remove(at: indexPath.row)
+            if let item = self?.itemsData[indexPath.row] {
+                _ = self?.shoppingItemManager.deleteItem(item: item)
+                self?.itemsData.remove(at: indexPath.row)
+            }
 
             tableView.deleteRows(at: [indexPath], with: .automatic)
             completionHandler(true)
@@ -115,7 +126,7 @@ extension ShoppingListViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = shopTableView.dequeueReusableCell(withIdentifier: cellKey, for: indexPath)
-        cell.textLabel?.text = itemsData[indexPath.row]
+        cell.textLabel?.text = itemsData[indexPath.row].name
         
         return cell
     }
