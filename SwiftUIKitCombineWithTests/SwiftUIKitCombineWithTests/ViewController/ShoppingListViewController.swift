@@ -6,13 +6,13 @@
 //
 
 import UIKit
+import Combine
 
 class ShoppingListViewController: UIViewController {
     
     let cellKey = "cell"
-    
-    var itemsData: [ShoppingItem] = []
-    let shoppingItemManager = ShoppingItemManager()
+    let viewModel = ShoppingListViewModel()
+    private var cancellables = Set<AnyCancellable>()
     
     private let shopTableView: UITableView = {
         let tableView = UITableView()
@@ -23,8 +23,6 @@ class ShoppingListViewController: UIViewController {
     
     override func viewDidLoad() {
         view.backgroundColor = .white
-        
-        itemsData = shoppingItemManager.fetchAllItems()
         
         title = "Shopping List"
         
@@ -46,6 +44,17 @@ class ShoppingListViewController: UIViewController {
         shopTableView.dataSource = self
         shopTableView.delegate = self
         shopTableView.register(UITableViewCell.self, forCellReuseIdentifier: cellKey)
+        
+        setupBindings()
+    }
+    
+    private func setupBindings() {
+        viewModel.$items
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.shopTableView.reloadData()
+            }
+            .store(in: &cancellables)
     }
     
     @objc private func onTapAddButton() {
@@ -58,27 +67,16 @@ class ShoppingListViewController: UIViewController {
         alert.addTextField { [weak self] textField in
             textField.placeholder = "Name"
             
-            if let index = index {
-                textField.text = self?.itemsData[index].name
+            if let index = index,
+               let name = self?.viewModel.items[index].name {
+                textField.text = name
             }
         }
         
         let submitAction = UIAlertAction(title: "Save", style: .default) { [weak self] _ in
             if let itemName = alert.textFields?.first?.text,
                !itemName.isEmpty {
-                
-                if let index = index,
-                   let item = self?.itemsData[index] {
-                    if (self?.shoppingItemManager.updateItem(item: item, newName: itemName)) != nil {
-                        self?.itemsData[index].name = itemName
-                    }
-                } else {
-                    if let item = self?.shoppingItemManager.createItem(name: itemName) {
-                        self?.itemsData.append(item)
-                    }
-                }
-                
-                self?.shopTableView.reloadData()
+                self?.viewModel.addOrUpdate(name: itemName, index)
             }
         }
         
@@ -103,12 +101,7 @@ extension ShoppingListViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, completionHandler in
-            if let item = self?.itemsData[indexPath.row] {
-                _ = self?.shoppingItemManager.deleteItem(item: item)
-                self?.itemsData.remove(at: indexPath.row)
-            }
-
-            tableView.deleteRows(at: [indexPath], with: .automatic)
+            self?.viewModel.delete(indexPath.row)
             completionHandler(true)
         }
         
@@ -121,12 +114,12 @@ extension ShoppingListViewController: UITableViewDelegate {
 
 extension ShoppingListViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return itemsData.count
+        return viewModel.items.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = shopTableView.dequeueReusableCell(withIdentifier: cellKey, for: indexPath)
-        cell.textLabel?.text = itemsData[indexPath.row].name
+        cell.textLabel?.text = viewModel.items[indexPath.row].name
         
         return cell
     }
