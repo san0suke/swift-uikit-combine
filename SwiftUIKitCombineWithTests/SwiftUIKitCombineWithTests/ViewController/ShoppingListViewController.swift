@@ -88,6 +88,7 @@ class ShoppingListViewController: UIViewController {
 }
 
 extension ShoppingListViewController: UITableViewDelegate {
+    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         onTapTableLine(indexPath.row)
     }
