@@ -91,6 +91,20 @@ extension ShoppingListViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         onTapTableLine(indexPath.row)
     }
+    
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, completionHandler in
+            self?.itemsData.remove(at: indexPath.row)
+
+            tableView.deleteRows(at: [indexPath], with: .automatic)
+            completionHandler(true)
+        }
+        
+        deleteAction.backgroundColor = .red
+        deleteAction.image = UIImage(systemName: "trash")
+        
+        return UISwipeActionsConfiguration(actions: [deleteAction])
+    }
 }
 
 extension ShoppingListViewController: UITableViewDataSource {
