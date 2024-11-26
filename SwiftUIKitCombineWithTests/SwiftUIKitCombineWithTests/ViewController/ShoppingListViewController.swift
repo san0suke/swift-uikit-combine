@@ -46,16 +46,30 @@ class ShoppingListViewController: UIViewController {
     }
     
     @objc private func onTapAddButton() {
+        showAlert(nil)
+    }
+    
+    private func showAlert(_ index: Int?) {
         let alert = UIAlertController(title: "Enter item name", message: nil, preferredStyle: .alert)
         
-        alert.addTextField { textField in
+        alert.addTextField { [weak self] textField in
             textField.placeholder = "Name"
+            
+            if let index = index {
+                textField.text = self?.itemsData[index]
+            }
         }
         
         let submitAction = UIAlertAction(title: "Save", style: .default) { [weak self] _ in
             if let itemName = alert.textFields?.first?.text,
                !itemName.isEmpty {
-                self?.itemsData.append(itemName)
+                
+                if let index = index {
+                    self?.itemsData[index] = itemName
+                } else {
+                    self?.itemsData.append(itemName)
+                }
+                
                 self?.shopTableView.reloadData()
             }
         }
@@ -67,11 +81,15 @@ class ShoppingListViewController: UIViewController {
         
         present(alert, animated: true)
     }
+    
+    private func onTapTableLine(_ index: Int) {
+        showAlert(index)
+    }
 }
 
 extension ShoppingListViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print(indexPath.row)
+        onTapTableLine(indexPath.row)
     }
 }
 
