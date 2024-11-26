@@ -51,7 +51,7 @@ class MainViewController: UIViewController {
     }
     
     @objc private func goToShoppingList() {
-        var viewController = ShoppingListViewController()
+        let viewController = ShoppingListViewController()
         navigationController?.pushViewController(viewController, animated: true)
     }
 }
