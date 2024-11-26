@@ -28,9 +28,12 @@ class MainViewController: UIViewController {
         super.viewDidLoad()
         
         setupUI()
+        setupBindings()
     }
 
     private func setupUI() {
+        view.backgroundColor = .white
+        
         shoppingListButton.setTitle("Shopping list: #", for: .normal)
         
         view.addSubview(shoppingListButton)
@@ -39,6 +42,16 @@ class MainViewController: UIViewController {
             shoppingListButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             shoppingListButton.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
+        
+        shoppingListButton.addTarget(self, action: #selector(goToShoppingList), for: .touchUpInside)
     }
 
+    private func setupBindings() {
+        
+    }
+    
+    @objc private func goToShoppingList() {
+        var viewController = ShoppingListViewController()
+        navigationController?.pushViewController(viewController, animated: true)
+    }
 }
