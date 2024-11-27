@@ -6,8 +6,12 @@
 //
 
 import UIKit
+import Combine
 
 class MainViewController: UIViewController {
+    
+    private var cancellables = Set<AnyCancellable>()
+    private let viewModel = MainViewModel()
     
     var shoppingListButton: UIButton = {
         let button = UIButton(type: .roundedRect)
@@ -34,8 +38,6 @@ class MainViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = .white
         
-        shoppingListButton.setTitle("Shopping list: #", for: .normal)
-        
         view.addSubview(shoppingListButton)
         
         NSLayoutConstraint.activate([
@@ -47,7 +49,12 @@ class MainViewController: UIViewController {
     }
 
     private func setupBindings() {
-        
+        viewModel.$shoppingItemCount
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] value in
+                self?.shoppingListButton.setTitle("Shopping list: \(value)", for: .normal)
+            }
+            .store(in: &cancellables)
     }
     
     @objc private func goToShoppingList() {

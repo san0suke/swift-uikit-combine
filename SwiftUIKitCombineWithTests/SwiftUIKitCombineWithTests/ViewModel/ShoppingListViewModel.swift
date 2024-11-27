@@ -12,9 +12,9 @@ class ShoppingListViewModel {
     @Published private(set) var items: [ShoppingItem] = []
     
     private let shoppingItemManager: ShoppingItemManager
-    private var cancellables = Set<AnyCancellable>()
+    private(set) var cancellables = Set<AnyCancellable>()
     
-    init(shoppingItemManager: ShoppingItemManager = ShoppingItemManager()) {
+    init(shoppingItemManager: ShoppingItemManager = .shared) {
         self.shoppingItemManager = shoppingItemManager
         fetchAllItems()
     }

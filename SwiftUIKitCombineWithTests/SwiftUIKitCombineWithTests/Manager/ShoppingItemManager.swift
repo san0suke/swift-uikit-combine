@@ -7,12 +7,20 @@
 
 import CoreData
 import UIKit
+import Combine
 
 class ShoppingItemManager {
 
+    static var shared: ShoppingItemManager = ShoppingItemManager()
+    
     private let context: NSManagedObjectContext
     
-    init(context: NSManagedObjectContext = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext) {
+    private var saveCompletedSubject = PassthroughSubject<Void, Never>()
+    var saveCompletedPublisher: AnyPublisher<Void, Never> {
+        saveCompletedSubject.eraseToAnyPublisher()
+    }
+    
+    private init(context: NSManagedObjectContext = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext) {
         self.context = context
     }
     
@@ -25,6 +33,8 @@ class ShoppingItemManager {
         
         do {
             try context.save()
+            saveCompletedSubject.send(())
+            
             return newItem
         } catch {
             print("Failed to create item: \(error)")
@@ -48,6 +58,8 @@ class ShoppingItemManager {
         
         do {
             try context.save()
+            saveCompletedSubject.send(())
+            
             return true
         } catch {
             print("Failed to update item: \(error)")
@@ -60,6 +72,8 @@ class ShoppingItemManager {
         
         do {
             try context.save()
+            saveCompletedSubject.send(())
+            
             return true
         } catch {
             print("Failed to delete item: \(error)")
